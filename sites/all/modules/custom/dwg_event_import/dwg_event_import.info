@@ -1,0 +1,3 @@
+name = Dwg Event Import
+description = dynamically create event nodes using an event title and start date and/or time
+core = 7.x

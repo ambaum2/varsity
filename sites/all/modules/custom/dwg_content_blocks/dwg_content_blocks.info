@@ -1,0 +1,3 @@
+name = Dwg Content Blocks
+description = provides dynamic content blocks to display images and other content based upon the current page (could also do this in panels)
+core = 7.x

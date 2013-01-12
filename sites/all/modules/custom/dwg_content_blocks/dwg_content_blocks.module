@@ -1,0 +1,65 @@
+<?php
+/* dwg content theming 
+ * implements hook_theme()
+ */
+ function dwg_content_blocks_theme() {
+ 	return array(
+	  'dwg_content_blocks_image_render' => array(
+	      'variables' => array('node' => NULL),
+	  ),
+	  'dwg_content_blocks_text_render' => array(
+	      'variables' => array('node' => NULL),
+	  ),
+	);
+ }
+/* hook_block_info
+ * define our menu
+ */
+function dwg_content_blocks_block_info() {
+  $blocks['right_image_content'] = array(
+    'info' => t('Content for Right Image on Node pages'),
+  );
+  $blocks['right_text_content'] = array(
+    'info' => t('Content for Right Textual information on Node pages'),
+  );
+
+  return $blocks;
+}
+
+/* hook_block_view
+ * control how the menu is output
+ */
+function dwg_content_blocks_block_view($delta = '') {
+	$block = array();	
+	
+	if($delta = "right_image_content" && arg(0) == 'node') { //check if this page has rihgt_image_content loaded and is node page
+		$node = node_load(arg(1));
+		if(isset($node->field_main_image['und'][0]['filename'])) { //check if this node has 
+			$block['content'][] = array(
+			  '#type' => 'markup',
+			  '#markup' => theme('dwg_content_blocks_image_render',$node->field_main_image['und'][0]),
+			);
+			return $block;
+		}
+	}
+	if($delta = "right_image_content" && arg(0) == 'node') {
+		if(isset($node->field_additional_info['und'][0]['safe_value'])) { //check if this node has 
+			$block['content'][] = array(
+			  '#type' => 'markup',
+			  '#markup' => theme('dwg_content_blocks_text_render',$node->field_additional_info['und'][0]),
+			);
+			return $block;
+		}
+	}
+	//return $block;
+}
+function theme_dwg_content_blocks_image_render($variables) {
+	$output = "<img style='width:". $variables['width'] . "px;height:" . $variables['height'] . "px;'"
+	      		. "src='".file_create_url(file_build_uri($variables['filename']))."' />";
+	return $output;
+}
+
+function theme_dwg_content_blocks_text_render($variables) {
+	$output = $variables['safe_value'];
+	return $output;
+}

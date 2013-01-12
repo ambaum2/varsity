@@ -1,0 +1,56 @@
+
+/* font settings Custom fonts: Ubuntu|Oswald|Quando|Alegreya */
+h1 {font-family:Trebuchet MS;}
+p {font-family:Trebuchet MS;}
+a {font-family:Trebuchet MS;color:#336633}
+a:visited {color:#666666;}
+a:active {color:#339933;}
+tbody {border:none;}
+
+#page-title {color:#339933;}
+.page-title {color:#339933;text-decoration:none;text-align:center;}
+
+/* views styles */
+.view-arts-partners-list .views-field-field-main-image {float:left;padding:0px 20px;}
+.view-arts-partners-list .views-row {float:left;}
+
+
+/* had to fix an admin_menu quirk - only happens for this template*/
+#admin-menu {position:fixed;}
+
+/*content layout  */
+body {margin: 0px 0px 0px 0px;}
+body.not-front {background: url(../images/inside_BKGD.jpg) repeat-x #006600;}
+body.front {background:black;}
+/*content layout panels */
+.panel-2col-stacked .panel-col-last {width:30%;}
+.panel-2col-stacked .panel-col-first {width:70%;}
+/*front page*/
+#frontpageContainer {background-image: url(../images/home_bkgd_con_2.jpg);background-repeat: repeat-x;width:auto;height:579px;background-color: #000;padding-top:0px;} /*from 1008 height */
+#frontpageMasthead {background: url(../images/home_9_10_anim.gif) no-repeat;display:block;height:579px;width:761px;margin:0 auto;}/*from 721 height */
+
+/*inside pages */
+.content-middle {background:#ffffff;}
+#inside_container {background:white;width:940px;height:1400px;margin:0 auto;}
+#left_banner {background:url(../images/varsity_left.jpg) no-repeat black; width:140px;height:1400px;float:left}
+#left_banner .dwg_hidden_login {padding:25px;background:transparent;position:relative;left:100px;top:1354px;}
+#inside_content {float:left;width:800px;}
+#header {background:url(../images/inside_top_banner.jpg) no-repeat; width:800px;height:166px;}
+#masthead {width:242px;height:167px;margin:0 auto;}
+#NavigationMenuInside {background:url(../images/main_nav_bg.jpg) repeat-x;height:38px;}
+#NavigationMenuInside #main-menu-links {margin:0px;}
+#NavigationMenuInside #main-menu-links li {float:left;padding:0px 30px 3px 0px;}
+#NavigationMenuInside h2 {margin:0px;}
+#content_middle {background:white;width:760px;height:950px;margin:0 auto;padding:0px 20px 7px 20px;overflow-y:auto;}
+#content_middle .field-name-body {width:570px;}
+#page-title {text-align:center;}
+#content_right_image {float:right;margin:0px 0px 20px 5px;max-width:250px;overflow:hidden;}
+#coming_attractions {background:url(../images/coming_attractions.jpg) no-repeat;float:right;width:200px;height:33px;overflow:hidden;}
+#coming_attractions:hover {background-position:0% 83%;}
+.page-calendar-month #coming_attractions {float:left;}
+#coming_attractions a {height:33px;width:200px;position:absolute;}
+#attractions_container p {margin:0px;font-size:0px;}
+#content_footer {background:white;width:760px;padding:5px 20px 0px 20px;margin:0 auto;height:130px;}
+#footer_left_content {float: left; margin: 40px 40px 40px 0px;}
+#footer_right_content {float:left;}
+#footer_nav {text-align: center;width:700px;height:auto;padding:5px 20px 0px 20px;}

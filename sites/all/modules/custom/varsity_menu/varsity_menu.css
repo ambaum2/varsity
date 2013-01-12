@@ -1,0 +1,12 @@
+/* markup for the menu system */
+.menu_list {list-style:none;margin:0 auto;padding:0px;}
+.main_link {float: left;margin: 0px;position:relative;}
+.main_link .link_name {color: #FFFFFF;float: left;padding: 0px;}
+/*the below is key for the rollover to work cross browser nav_overlay should be a span nested in an a tag left 0 and top 0 position absolute are critical*/
+.main_link .nav_overlay {top:0px;left:0px;margin:0px;z-index:50;position:absolute;color:white;text-align:center;}
+.main_link .sub_menu {background: none repeat scroll 0 0 white;border: 1px solid #899BA5;left: 0;padding: 5px;position: absolute;text-align: left;top: 38px;z-index: 100;list-style:none;}
+.main_link .sub_menu li {background: url("/skin/frontend/default/default/images/bkg_nav1.gif") repeat-x scroll 0 100% #ccffcc;padding: 8px;width: 250px;}
+.main_link .sub_menu li:hover {background:#99cc99;color:black;}
+.main_link .sub_menu li a {color: black;display: block;text-decoration:none;}
+
+.dwg_seperator {float:left;}

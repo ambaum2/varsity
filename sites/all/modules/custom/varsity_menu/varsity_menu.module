@@ -1,0 +1,97 @@
+<?php
+/* hook_block_info
+ * define our menu
+ */
+function varsity_menu_block_info() {
+  $blocks['varsity_main_menu'] = array(
+    'info' => t('Varsity Theater Main Menu'),
+  );
+
+  return $blocks;
+}
+
+/* hook_block_view
+ * control how the menu is output
+ */
+function varsity_menu_block_view($delta = '') {
+  $block = array();
+    //$img_field = "field_menu_rollover_image['und'][0]";
+  //$img_rollover = "field_menu_rollover_image['und'][0]";
+  //$img_seperator = "field_menu_item_seperator_image['und'][0]";
+  $menu_name = 'varsity_main_menu';
+  // Taxonomy menu block.
+  if ($delta == $menu_name) {
+  	//drupal_add_css($GLOBALS['base_url'] ."/".drupal_get_path("module","varsity_menu") . "/varsity_menu.css",array("group"=>CSS_THEME,"weight"=>-10));
+    //echo $GLOBALS['base_url'] ."/".drupal_get_path("module","varsity_menu") . "/varsity_menu.css";
+	//die;
+    if($taxonomy = taxonomy_vocabulary_machine_name_load($menu_name)) {
+      $terms = taxonomy_get_tree($taxonomy->vid); // Use the correct vocabulary id. 
+      $previous_depth = 0;
+	  $i = 0;
+	  $total_menu_width = 0;
+	  $menu_width_padding = 5;
+	  $output = "";
+	  $block['content'] = "";
+	  $node = node_load(arg(1));
+	  isset($node->field_category['und'][0]['tid']) ? $active_category = $node->field_category['und'][0]['tid'] : $active_category = "";
+      //print_r($node->field_category);
+      //echo $active_category;
+      //die;
+      foreach($terms as $tree_item) {
+	    $item = taxonomy_term_load($tree_item->tid);
+		(isset($item->field_menu_link['und'][0]['safe_value'])) ? $item_url =  $item->field_menu_link['und'][0]['safe_value'] : $item_url = "";
+		if($tree_item->parents[0] == 0) {
+			if($i != 0) {	
+				($previous_depth > $tree_item->depth) ? $output .= "</ul></li>" : $output .= '</li>';
+			}
+			$alt = $tree_item->name;
+			
+	      	$output .= "<li class='main_link'><a class='link_name' href='". base_path(). $item_url."'>"
+	      		. "<img style='width:". $item->field_menu_image['und'][0]['width'] 
+	      		. "px;' alt='$alt'";//height:" . $item->field_menu_image['und'][0]['height'] . "px;
+
+			(array_search($item_url,explode('/',$_SERVER['REQUEST_URI'])) || $active_category == $tree_item->tid) ?
+				$output .= " src='".file_create_url(file_build_uri($item->field_menu_rollover_image['und'][0]['filename']))."' />"
+				: $output .= " src='".file_create_url(file_build_uri($item->field_menu_image['und'][0]['filename']))."' />";
+			
+			$output .= '<span class="nav_overlay" style="'
+				. 'background:url('. file_create_url(file_build_uri($item->field_menu_rollover_image['und'][0]['filename'])) . ') no-repeat;'
+				. 'width:'. $item->field_menu_rollover_image["und"][0]["width"] . 'px;'
+				. 'height:' . $item->field_menu_rollover_image["und"][0]["height"] . 'px;display:none;">'//
+				//. '<!--[if lt IE 8]>top:-' . $item->field_menu_rollover_image["und"][0]["height"] . 'px;position:relative;<![endif]-->">'
+				. '</span></a>';
+			if(isset($item->field_menu_item_seperator_image['und'][0]['filename'])) {
+				$output .= '<img class="dwg_seperator" alt="' . $alt .'" src="'. file_create_url(file_build_uri($item->field_menu_item_seperator_image['und'][0]['filename'])) . '" />';
+				$total_menu_width = $total_menu_width + $item->field_menu_item_seperator_image['und'][0]['width'];
+			} 
+				
+			$total_menu_width = $total_menu_width + $item->field_menu_image['und'][0]['width'];
+		 } else {
+			($tree_item->weight == 0) ? $output .= "<ul class='sub_menu' style='display:none;'>" : '';
+			$output .= "<li><a href='". base_path(). $item_url . "'>" . $item->name . "</a></li>";
+		 }
+		 $previous_depth = $tree_item->depth;
+		 $i++;
+      }
+	  $block['content'] .= "<ul class='menu_list' style='width: " . ($total_menu_width + $menu_width_padding) . "px;'>" . $output . "</li></ul>";
+	  
+	  return $block;
+
+  } 
+}
+
+
+/*$block['content'] .= "<li style='float:left;'><a style='position:relative;display:block;float:left;' href='". $item->field_menu_link['und'][0]."'>"
+	      		. "<img style='width:". $item->field_menu_image['und'][0]['width'] . "px;height:" . $item->field_menu_image['und'][0]['height'] . "px;'"
+	      		. "src='".file_create_url(file_build_uri($item->field_menu_image['und'][0]['filename']))."' />";
+			
+			$block['content'] .= '<div class="navOverlay" style="top:0px;font-size:22px;display:none;'
+				. 'background:url('. file_create_url(file_build_uri($item->field_menu_rollover_image['und'][0]['filename'])) . ') no-repeat;'
+				. 'width:'. $item->field_menu_rollover_image["und"][0]["width"] . 'px;height:' . $item->field_menu_rollover_image["und"][0]["height"]
+				. 'px;z-index:50;position:absolute;color:white;padding-top:50px;text-align:center;">'.$item->field_menu_link['und'][0].'</div></a>'
+				. '<img class="dwg_seperator" style="float:left;" src="'. file_create_url(file_build_uri($item->field_menu_item_seperator_image['und'][0]['filename'])) . '" />';
+ * 
+ * 
+}*/
+}
+

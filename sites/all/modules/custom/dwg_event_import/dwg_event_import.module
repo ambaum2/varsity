@@ -1,0 +1,186 @@
+<?php
+function dwg_event_import_block_info() {
+	$blocks['dwg_event_import'] = array(
+		'info' => t('Dwg Event Import'),
+		'cache' => DRUPAL_CACHE_PER_ROLE,
+	);
+	return $blocks;
+}
+/* set up the tabs
+ * hook_menu
+ */
+function dwg_event_import_menu() {
+	$items = array();
+	$items['admin/config/content/dwg_event_import'] = array(
+		'title' => 'DWG Event Import',
+		'description' => 'import events from a database table',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('dwg_import_form'),
+		'access arguments' => array('access administration pages'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	return $items;
+}
+//or use file_get_contents
+function dwg_event_import_remote_db_credentials() {
+	
+	return array(
+		'database' 	=> 'pulluserdata', //Database name //alan this database has legacy address, lat, and long thats all!
+		'username' 	=> 'pullusers_insert', //Database user
+		'password'	=> '74514n105PR4460',//'74514n105PR4460', //Database password
+		'host'		=> 'ewhserver1263.edgewebhosting.net', //Database hostewhserver1263.edgewebhosting.net:3306
+		'driver'	=> 'mysql' //Replace with required database driver if needed. Assumes mysql. 
+	);
+}
+function dwg_import_form ($formName, $namespace) {
+
+	$form["get_events"]['submit'] = array(
+	  '#type' => 'submit',
+	  '#value' => t('Get Events and import from file'),
+	  '#submit' => array('dwg_create_events'),
+	);
+	$form['file_upload'] = array(
+	  '#title' => t('File Upload'),
+	  '#type' => 'managed_file',
+	  '#description' => t('Upload a txt file to extract the event data - (save your excel spreadsheet as a txt file).'),
+	  '#default_value' => variable_get('file_upload', ''),
+	  '#upload_validators' => array(dwg_event_file_upload($form, &$form_state),
+	  	'file_validate_extensions' =>array('docx xlsx txt')
+	  ),
+	  '#upload_location' => 'public://event_uploads/',
+	);
+	$form['end_row'] = array(
+	  '#type' => 'textfield', 
+	  '#title' => t('Ending Row'), 
+	  '#default_value' => 0, //strftime('%m-%d-%G',time()), //24 hours ago
+	  '#size' => 60, 
+	  '#maxlength' => 200, 
+	  '#required' => TRUE,
+	  '#description' => t('Leave as 0 to get all rows in your text file.'),
+	);
+	$form['selected_file'] = array(
+	  '#type' => 'select',
+	  '#title' => t('Select Your File'),
+	  '#options' => dwg_event_get_files('public://event_uploads/'),
+	  '#default_value' => '',
+	  '#required' => TRUE,
+	  '#description' => t('The name of the file you would like to add the events from.'),
+	  //'#disabled' => $has_data,
+	  '#size' => 1,
+	  '#ajax' => array(
+	  //'callback' => 'entityreference_settings_ajax', if you wanted i think you could turn this into a text field and enable ajax autocomplete
+	  //'wrapper' => $form['#id'],
+	  //'element' => $form['#array_parents'],
+	  ),
+	  '#limit_validation_errors' => array(),
+	  );
+	$form['test_mode'] = array(
+	  '#type' => 'select',
+	  '#title' => t('Select Test to run a trial run'),
+	  '#options' => array('0'=>"Test",'1'=>"Live"),
+	  '#default_value' => '1',
+	  '#required' => TRUE,
+	  '#description' => t('Select 0 if you want to see what the data will look like.'),
+	  );
+	//$node = node_load(10);
+	$msg = variable_get("event_add_message");
+	if(isset($msg)) {
+		drupal_set_message($msg, 'status');
+	}
+	return $form;
+}
+function dwg_event_get_files($directory) {
+	$files_list = array("None" => "None");
+	$files = file_scan_directory($directory, '/.*\.+/'); //find any file
+	foreach($files as $file) {
+		$files_list[$file->uri] = $file->filename;
+	}
+	return $files_list;
+}
+function dwg_event_file_upload($form, &$form_state) {
+  /*if (!isset($form_state['values']['file_upload']) || !is_numeric($form_state['values']['file_upload'])) {
+    form_set_error('file_upload', t('Please select an image to upload.'));
+  }*/
+  print_r($form_state);
+  if (isset($form_state['values']['file_upload'])) {
+    $file = file_load($form_state['values']['file_upload']);
+	watchdog('dwg_event', 'file Id:  %fid', array('%fid' => $form_state['values']['file_upload']), WATCHDOG_NOTICE, $link = NULL);
+    // Change status to permanent.
+    $file->status = FILE_STATUS_PERMANENT;
+    // Save.
+    file_save($file);
+    // Record that the module (in this example, user module) is using the file.
+    file_usage_add($file, 'user', 'user', $account->uid); 
+	drupal_set_message($message = "File Uploaded and Saved Successfully", $type = 'status');
+  }
+}
+function dwg_create_events() {	
+	  $i = 0;
+	  $default_am_pm = "pm";
+	  $matches = array();
+	  $file_contents = array();
+	  (isset($_POST["end_row"]) ? $row_end = $_POST["end_row"] : $row_end = 0);
+	  $file_name = $_POST["selected_file"];
+	  $test_mode = $_POST["test_mode"];
+	  if(file_exists($file_name) && $row_end >= 0) { //file exists and a valid option for rows has been selected
+	    $handle = fopen($file_name,"r");
+	    $time_table = "<table style='background:tan;'>";
+		$regex_error = "";
+	    $replace_values = array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday",":");
+	    //you may need to subtract 6*3600 seconds from the values saved to start and end fields
+	    while(($cols = fgetcsv($handle,0,"\t")) && ($i <= $row_end || $row_end == 0)) {
+		  	foreach($cols as $key=>$val) {
+		  		if($key == 0) {	
+		  			$file_contents[$i]["start_date"] = str_replace($replace_values,"",$val) . " 2012";
+					//$file_contents[$i]["title"] = $val;
+				} else {
+					if(preg_match_all('/([0-2]?[\d](:[0-6][\d])?[\s]*([a|p](\.)?m(\.)?)?)([\s]|-)([\d]{1,2}(:[0-6][\d])?[\s]*([a|p](\.)?m(\.)?)?)/', $val,$matches)) {
+						//we have good data so begin the process
+						 
+						$title = preg_replace('/([0-2]?[\d](:[0-6][\d])?[\s]*([a|p](\.)?m(\.)?)?)([\s]|-)([\d]{1,2}(:[0-6][\d])?[\s]*([a|p](\.)?m(\.)?)?)/',"",$val);
+						$file_contents[$i]["title"] = str_replace(",","",$title);
+						if($matches[3][0]) { //am or pm defined for start time
+							$file_contents[$i]["start_time"] = $matches[1][0];// . " " . $matches[3][0];
+						} elseif($matches[9][0]) {
+							$file_contents[$i]["start_time"] = $matches[1][0] . " " . $matches[9][0];
+						} else {
+							$file_contents[$i]["start_time"] = $matches[1][0] . " " . $default_am_pm;
+						}
+						if($matches[9][0]) { //am or pm defined for end time
+							$file_contents[$i]["end_time"] = $matches[7][0];
+						} else { //not defined so use default
+							$file_contents[$i]["end_time"] = $matches[7][0] . " " . $default_am_pm;
+						}
+						$start_date = $file_contents[$i]["start_time_stamp"] = $file_contents[$i]["start_date"] . " " . $file_contents[$i]["start_time"];
+						$end_date = $file_contents[$i]["end_time_stamp"] = $file_contents[$i]["start_date"] . " " . $file_contents[$i]["end_time"];
+						$time_table .= "<tr><td>Title</td>" . $file_contents[$i]["title"] . "</td><td>Start Date:</td><td>" . $start_date . "</td><td>End Date:</td><td>"
+							. $end_date . "</td><td>Stamp Start</td><td>" . strtotime($start_date) . "</td>"
+							. "<td>Stamp End:</td><td" . (strtotime($start_date)==strtotime($end_date) ? print " style='background:red;'" : "") 
+							. ">" . strtotime($end_date) . "</td><td>Diff</td><td>" . ((strtotime($start_date)-strtotime($end_date))/3600) . "</td></tr>";
+					} else {
+						$regex_error = "could not find date row" + $i;
+						watchdog("event_add",$regex_error,null,WATCHDOG_NOTICE);	
+					}
+				}
+		  	}
+			if(!($regex_error) && $test_mode ==1) { //test mode 1 means Live test was selected
+				$event = new stdClass(); //creates node object
+				$event->type = 'event'; //sets node type
+				node_object_prepare($event); //system function to 
+				$event->title = $file_contents[$i]["title"];
+				$event->language = LANGUAGE_NONE;
+				$event->field_event_date[$event->language][0]["value"] = gmdate("Y-m-d H:i:s",strtotime($file_contents[$i]["start_time_stamp"]));
+				$event->field_event_date[$event->language][0]["value2"] = gmdate("Y-m-d H:i:s",strtotime($file_contents[$i]["end_time_stamp"]));
+				node_save($event);
+			}
+			$i++;
+	    	}
+			echo $time_table . "</table>";
+		    ($test_mode) ? $msg = "<p>Total events created: " . $i . "</p><pre>". print_r($file_contents,true) . "</pre>"
+		    	: $msg = "<p>TEST MODE: Heres how the data would look:" . $i . "</p><pre>". print_r($file_contents,true) . "</pre>";
+	    }
+	//$msg .= "<p>Total events created: " . $i . "<br /> ID of last event:</p><pre>". print_r($file_contents,true) . "</pre>";
+	variable_set("event_add_message", $msg);
+	//drupal_set_message($msg . $updates . $output, 'status');
+	//return $msg;
+}
