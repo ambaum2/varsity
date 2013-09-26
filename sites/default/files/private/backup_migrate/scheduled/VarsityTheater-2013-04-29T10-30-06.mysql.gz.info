@@ -1,0 +1,8 @@
+filename = "VarsityTheater-2013-04-29T10-30-06"
+description = ""
+datestamp = "1367249407"
+generator = "Backup and Migrate (http://drupal.org/project/backup_migrate)"
+generatorversion = "7.x-2.x"
+sites[0][version] = "7.14"
+sites[0][name] = "Varsity Theater"
+sites[0][url] = "http://varsitycenterforthearts.org/"
